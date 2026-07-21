@@ -1,0 +1,18 @@
+# Environment Variables / API Keys (CRITICAL)
+.env
+.env.local
+.env.*
+
+# n8n specific local files
+credentials/
+*.bak
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Python/Node (in case you add custom scripts later)
+node_modules/
+__pycache__/
+*.pyc
+.venv/
