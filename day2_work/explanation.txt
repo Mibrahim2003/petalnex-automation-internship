@@ -1,0 +1,5 @@
+1. Schedule trigger: This node automates the daily trigger of the email. We select the week days (Mon-Sat) and a fixed time 9:00 AM. and every selected day at that specific time the node is triggered.
+
+2. Edit Field Manuals: This is just a data preparation node. This does not send anything or talk to any services. It just builds data or sets it that eventually flows to the next node.
+
+3. Send a message: This is self explanatory. It sends a message.
