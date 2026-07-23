@@ -1,0 +1,90 @@
+{
+  "name": "Record Classifier",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "e81abf56-48d2-417c-a21e-0493bd7be45e",
+      "name": "Run Demo",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Return an array of items. Each item MUST be shaped { json: {...} }.\n// These key/value pairs demonstrate strings and numbers in JSON.\nconst records = [\n  { Name: \"Aisha Khan\",    Email: \"aisha.khan@example.com\",  Department: \"Engineering\", Score: 92 },\n  { Name: \"Bilal Ahmed\",   Email: \"bilal.ahmed@example.com\", Department: \"Marketing\",   Score: 74 },\n  { Name: \"Carlos Mendez\", Email: \"carlos.m@example.com\",    Department: \"Sales\",       Score: 58 },\n  { Name: \"Dana Lee\",      Email: \"dana.lee@example.com\",    Department: \"Finance\",     Score: 80 },\n  { Name: \"Emeka Obi\",     Email: \"emeka.obi@example.com\",   Department: \"Support\",     Score: 63 },\n];\n\nreturn records.map((record) => ({ json: record }));"
+      },
+      "id": "db66834c-2c6b-4322-98be-5b13cae32637",
+      "name": "Create Records",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "classification",
+              "name": "Classification",
+              "type": "string",
+              "value": "={{ $json.Score >= 80 ? 'Excellent' : ($json.Score >= 60 ? 'Good' : 'Needs Improvement') }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "fc268a99-eaf1-4828-85e3-37e3902e6cc4",
+      "name": "Classify Record",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        0
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Run Demo": {
+      "main": [
+        [
+          {
+            "node": "Create Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Records": {
+      "main": [
+        [
+          {
+            "node": "Classify Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5ddc66e0-d00a-4b7f-8baa-c32159ac7f13",
+  "meta": {
+    "instanceId": "6412cdd215e40f8104d65360d175114840ece97edc7aec67b6c82d9f6c1c0c00"
+  },
+  "nodeGroups": [],
+  "id": "DnooLu5DPygotDK2",
+  "tags": []
+}
