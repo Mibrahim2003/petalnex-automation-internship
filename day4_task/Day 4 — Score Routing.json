@@ -1,0 +1,243 @@
+{
+  "name": "Day 4 — Score Routing",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "083af551-bc1b-4cae-a955-a372bcc52568",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 10 sample records, each with a numeric score\nconst records = [\n  { id: 1, name: 'Alice',   score: 92 },\n  { id: 2, name: 'Bob',     score: 58 },\n  { id: 3, name: 'Charlie', score: 74 },\n  { id: 4, name: 'Diana',   score: 88 },\n  { id: 5, name: 'Ethan',   score: 65 },\n  { id: 6, name: 'Fiona',   score: 81 },\n  { id: 7, name: 'George',  score: 47 },\n  { id: 8, name: 'Hannah',  score: 95 },\n  { id: 9, name: 'Ian',     score: 70 },\n  { id: 10, name: 'Julia',  score: 33 },\n];\nreturn records.map((r) => ({ json: r }));"
+      },
+      "id": "e1dbe22f-04e3-4c76-a37a-588fc49e7eea",
+      "name": "Sample Records",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.score }}",
+                    "rightValue": 85,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.score }}",
+                    "rightValue": 70,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Needs Improvement"
+        }
+      },
+      "id": "6a829b24-f950-479a-bb25-4898defd77b0",
+      "name": "Route By Score",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "g1",
+              "name": "group",
+              "value": "Excellent",
+              "type": "string"
+            },
+            {
+              "id": "a1",
+              "name": "next_action",
+              "value": "Promote / reward",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "7ae92d3f-5036-42f2-b14a-76e231bcc20c",
+      "name": "Tag Excellent",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "g2",
+              "name": "group",
+              "value": "Good",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "next_action",
+              "value": "Keep monitoring",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "973895e3-7a92-49b1-abbc-8f4c15c6e978",
+      "name": "Tag Good",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "g3",
+              "name": "group",
+              "value": "Needs Improvement",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "next_action",
+              "value": "Schedule coaching",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "53239407-6740-4323-9881-ad61ec384e7a",
+      "name": "Tag Needs Improvement",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        384
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Sample Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample Records": {
+      "main": [
+        [
+          {
+            "node": "Route By Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route By Score": {
+      "main": [
+        [
+          {
+            "node": "Tag Excellent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Tag Good",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Tag Needs Improvement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0c6cc1f4-a8bc-460f-81d0-950e15b9e22d",
+  "meta": {
+    "instanceId": "6412cdd215e40f8104d65360d175114840ece97edc7aec67b6c82d9f6c1c0c00"
+  },
+  "nodeGroups": [],
+  "id": "jfhuIjz0cCF1qYa1",
+  "tags": []
+}
