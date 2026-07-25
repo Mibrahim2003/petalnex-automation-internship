@@ -1,0 +1,363 @@
+{
+  "name": "Internship Application Processing",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "308a37c5-80d5-4b29-aa84-8c265e8da413",
+      "name": "Run Processing",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1i1ZITgeQlBidJ80x2mmTf6QF5GYmJzSEKnt18zNKIp8"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "276197580",
+          "cachedResultName": "Please help me get the table so I can check my an..."
+        },
+        "options": {}
+      },
+      "id": "f237e174-6375-4840-87a7-d7baa6fbda99",
+      "name": "Read Applications",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        96
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fDgqzs7BK5MZNX6H",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// Eligibility thresholds — tweak these to change the rules\nconst SHORTLIST_MIN_CGPA = 3.0;   // >= this => Shortlisted\nconst REVIEW_MIN_CGPA = 2.5;      // >= this (but below shortlist) => Needs Review\n\nconst items = $input.all();\nconst out = [];\n\nfor (const item of items) {\n  const row = item.json || {};\n\n  const name = (row.Name ?? row.name ?? '').toString().trim();\n  const email = (row.Email ?? row.email ?? '').toString().trim();\n  const degree = (row.Degree ?? row.degree ?? '').toString().trim();\n\n  // Normalize CGPA: strip anything that is not a digit or a dot\n  const cgpaRaw = (row.CGPA ?? row.cgpa ?? row.Cgpa ?? '').toString();\n  const cgpa = parseFloat(cgpaRaw.replace(/[^0-9.]/g, ''));\n\n  const emailValid = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);\n\n  let status;\n  let notes;\n  let valid = true;\n\n  // --- Validation ---\n  if (!name || !email || !emailValid || isNaN(cgpa)) {\n    valid = false;\n    status = 'Needs Review';\n    notes = 'Missing/invalid data (name, email, or CGPA).';\n  // --- Eligibility conditions -> Categorization ---\n  } else if (cgpa >= SHORTLIST_MIN_CGPA) {\n    status = 'Shortlisted';\n    notes = 'Meets CGPA threshold (>= ' + SHORTLIST_MIN_CGPA + ').';\n  } else if (cgpa >= REVIEW_MIN_CGPA) {\n    status = 'Needs Review';\n    notes = 'Borderline CGPA (' + REVIEW_MIN_CGPA + ' - ' + (SHORTLIST_MIN_CGPA - 0.01).toFixed(2) + ').';\n  } else {\n    status = 'Not Eligible';\n    notes = 'CGPA below ' + REVIEW_MIN_CGPA + '.';\n  }\n\n  out.push({\n    json: {\n      ...row,\n      applicant_name: name || 'Applicant',\n      applicant_email: email,\n      cgpa_parsed: isNaN(cgpa) ? null : cgpa,\n      degree,\n      valid,\n      Status: status,\n      Notes: notes,\n    },\n  });\n}\n\nreturn out;\n"
+      },
+      "id": "4edd9612-79b3-48e0-9e65-56ee95b32ec7",
+      "name": "Validate & Categorize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1i1ZITgeQlBidJ80x2mmTf6QF5GYmJzSEKnt18zNKIp8"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "276197580",
+          "cachedResultName": "Please help me get the table so I can check my an..."
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "row_number"
+          ],
+          "value": {
+            "row_number": "={{ $json.row_number }}",
+            "Status": "={{ $json.Status }}",
+            "Notes": "={{ $json.Notes }}"
+          },
+          "schema": [
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "95d20b03-5e09-4063-a4a5-9bd87758ba36",
+      "name": "Update Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        672,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fDgqzs7BK5MZNX6H",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.Status }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "Shortlisted"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Shortlisted"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.Status }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "Needs Review"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Needs Review"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.Status }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "Not Eligible"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Not Eligible"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2a1eeffb-2f68-4cdd-bdfe-5052b6f7c3e8",
+      "name": "Route by Category",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.applicant_email }}",
+        "subject": "=Congratulations {{ $json.applicant_name }} — You are Shortlisted!",
+        "message": "=<p>Dear {{ $json.applicant_name }},</p><p>Congratulations! Based on your application for our internship program (CGPA {{ $json.cgpa_parsed }}, {{ $json.degree }}), you have been <b>shortlisted</b>.</p><p>Our team will reach out shortly with the next steps.</p><p>Best regards,<br/>Internship Team</p>",
+        "options": {}
+      },
+      "id": "cd77f4c2-4b4d-4751-9745-954eb3974730",
+      "name": "Email: Shortlisted",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        16
+      ],
+      "webhookId": "446ee3c9-e771-4a60-a0da-21bffc1b73ee",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "fKxq6dydiaeyf19r",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.applicant_email }}",
+        "subject": "=Your Internship Application — Update Needed",
+        "message": "=<p>Dear {{ $json.applicant_name }},</p><p>Thank you for applying to our internship program. Your application is currently <b>under review</b>. Note: {{ $json.Notes }}</p><p>Please ensure your details are complete and accurate. We will follow up once the review is finished.</p><p>Best regards,<br/>Internship Team</p>",
+        "options": {}
+      },
+      "id": "e11acd23-9f83-4611-a7ce-de59ca649c53",
+      "name": "Email: Needs Review",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        208
+      ],
+      "webhookId": "2935f2b8-3669-4d65-bb85-9e7ddd852f00",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "fKxq6dydiaeyf19r",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.applicant_email }}",
+        "subject": "=Your Internship Application — Outcome",
+        "message": "=<p>Dear {{ $json.applicant_name }},</p><p>Thank you for your interest in our internship program. After careful review, we are unable to move forward with your application at this time.</p><p>We encourage you to apply again in the future. We wish you the best in your studies and career.</p><p>Best regards,<br/>Internship Team</p>",
+        "options": {}
+      },
+      "id": "f4e54c92-589a-4610-86c9-0b90ea3a284c",
+      "name": "Email: Not Eligible",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        400
+      ],
+      "webhookId": "9b622cea-9ea3-4e44-a836-625be96a2292",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "fKxq6dydiaeyf19r",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Run Processing": {
+      "main": [
+        [
+          {
+            "node": "Read Applications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Applications": {
+      "main": [
+        [
+          {
+            "node": "Validate & Categorize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Categorize": {
+      "main": [
+        [
+          {
+            "node": "Update Sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Route by Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Category": {
+      "main": [
+        [
+          {
+            "node": "Email: Shortlisted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email: Needs Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email: Not Eligible",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d27798bc-82a8-43e9-8670-489a7eb84511",
+  "meta": {
+    "instanceId": "6412cdd215e40f8104d65360d175114840ece97edc7aec67b6c82d9f6c1c0c00"
+  },
+  "nodeGroups": [],
+  "id": "Ar31memPxGkqgDRS",
+  "tags": []
+}
