@@ -1,0 +1,238 @@
+{
+  "name": "Weather Notification Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f0db8954-2f4b-4245-b5bc-821f8864921f",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "=http://api.weatherstack.com/current",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "Peshawar"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        224,
+        0
+      ],
+      "id": "309f5350-76be-491f-9a46-5593e04c3add",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "TLNxUhKkcNuWEDh1",
+          "name": "Query Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "96520a3d-f6b4-41e3-9904-656d965a61ae",
+              "name": "temperature",
+              "value": "={{ $json.current.temperature }}",
+              "type": "number"
+            },
+            {
+              "id": "48d6b243-f79b-489b-a117-e4d59e6848b9",
+              "name": "weather_description",
+              "value": "={{ $json.current.weather_descriptions[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "40bc7429-1c0e-42cb-bb60-9415bbb6cb70",
+              "name": "uv_index",
+              "value": "={{ $json.current.uv_index }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        0
+      ],
+      "id": "f38c04ec-e76d-4159-b991-866119540f9e",
+      "name": "weather status"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "69385fac-2e29-482a-b162-62531c1b7790",
+              "leftValue": "={{ $json.weather_description }}",
+              "rightValue": "rain",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        0
+      ],
+      "id": "ce459aa1-37be-4baa-bae9-14be05738850",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "ibrahimaug5@gmail.com",
+        "subject": "Rain is expected",
+        "emailType": "text",
+        "message": "Rain is expected today – please carry an umbrella.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        -128
+      ],
+      "id": "9c063e64-cb65-4ffd-8cdc-a1d428221be5",
+      "name": "Send a message",
+      "webhookId": "59f0d838-b4e0-49ba-81c4-5b0298f345a8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "fKxq6dydiaeyf19r",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "ibrahimaug5@gmail.com",
+        "subject": "It is sunny",
+        "emailType": "text",
+        "message": "please apply sunscreen",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        80
+      ],
+      "id": "0add8abd-afb6-4079-b13f-ddb0ca2e009b",
+      "name": "Send a message1",
+      "webhookId": "59f0d838-b4e0-49ba-81c4-5b0298f345a8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "fKxq6dydiaeyf19r",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "weather status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "weather status": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "d2bdc75a-5b85-4f94-901c-fcb3ec1dfae6",
+  "meta": {
+    "instanceId": "6412cdd215e40f8104d65360d175114840ece97edc7aec67b6c82d9f6c1c0c00"
+  },
+  "nodeGroups": [],
+  "id": "N7t8TacxK5IFDt9o",
+  "tags": []
+}

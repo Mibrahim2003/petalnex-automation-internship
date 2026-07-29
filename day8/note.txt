@@ -1,0 +1,6 @@
+Note on API Authentication Method:
+
+    The Weatherstack API utilizes a Query Parameter authentication method.
+    The API requires the unique token to be appended directly to the request URL via the access_key parameter.
+    To handle this securely inside n8n without hard-coding the key into the URL string, the HTTP Request node was configured to use the Generic Credential Type.
+    Specifically, the Query Auth (httpQueryAuth) method was used to store the key as an internal n8n credential, which safely and dynamically injects the access_key parameter into the outgoing request.
