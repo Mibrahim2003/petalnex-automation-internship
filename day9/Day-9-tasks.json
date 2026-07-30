@@ -1,0 +1,80 @@
+{
+  "name": "Day-9-tasks",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "22fa51f6-d7f3-460e-8027-e9859c6a4d5e",
+      "name": "Run Day 9 Task",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Return 15 messy records. Each output item = one record.\nconst records = [\n  { name: '  aLiCe   johnson ', email: 'ALICE.Johnson@Example.COM', score: 92 },\n  { name: 'BOB smith',          email: 'Bob_Smith@EXAMPLE.com',     score: 74 },\n  { name: '  carol   DANVERS',  email: 'Carol.Danvers@Example.Com', score: 88 },\n  { name: 'david  BROWN ',      email: 'DAVID.brown@example.COM',   score: 61 },\n  { name: 'eVe   adams',        email: 'Eve.Adams@Example.com',     score: 95 },\n  { name: '  frank  MILLER ',   email: 'Frank.Miller@EXAMPLE.com',  score: 83 },\n  { name: 'GRACE lee',          email: 'grace.LEE@Example.COM',     score: 79 },\n  { name: 'henry   FORD ',      email: 'Henry.Ford@example.com',    score: 100 },\n  { name: '  ivy  CHEN',        email: 'IVY.chen@Example.Com',      score: 67 },\n  { name: 'jack   RYAN ',       email: 'Jack.Ryan@EXAMPLE.COM',     score: 85 },\n  { name: 'KAREN hill',         email: 'karen.HILL@example.com',    score: 58 },\n  { name: '  leo  PARKER ',     email: 'Leo.Parker@Example.com',    score: 90 },\n  { name: 'mia   WONG',         email: 'MIA.wong@EXAMPLE.com',      score: 72 },\n  { name: 'NOAH kim ',          email: 'Noah.Kim@Example.COM',      score: 81 },\n  { name: '  olivia  STONE',    email: 'olivia.STONE@example.com',  score: 45 },\n];\n\nreturn records.map((r) => ({ json: r }));"
+      },
+      "id": "3eeebb25-074e-4863-b6a8-3bec1fef50c0",
+      "name": "Generate Messy Dataset",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map((item) => item.json);\n\nconst toTitleCase = (value) =>\n  (value ?? '')\n    .trim()\n    .replace(/\\s+/g, ' ')\n    .split(' ')\n    .map((word) =>\n      word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : word\n    )\n    .join(' ');\n\n\nconst toGrade = (score) => {\n  if (score >= 90) return 'A';\n  if (score >= 80) return 'B';\n  if (score >= 70) return 'C';\n  if (score >= 60) return 'D';\n  return 'F';\n};\n\nconst passingGrades = ['A', 'B'];\n\nconst cleaned = rows.map((r) => ({\n  name: toTitleCase(r.name),\n  email: (r.email ?? '').trim().toLowerCase(),\n  score: r.score,\n  grade: toGrade(r.score),\n}));\n\nconst passed = cleaned.filter((r) => passingGrades.includes(r.grade));\n\nreturn passed.map((r) => ({ json: r }));"
+      },
+      "id": "84830461-da16-4d94-9f9e-29efa00cc296",
+      "name": "Clean, Grade & Filter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Run Day 9 Task": {
+      "main": [
+        [
+          {
+            "node": "Generate Messy Dataset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Messy Dataset": {
+      "main": [
+        [
+          {
+            "node": "Clean, Grade & Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "0f8016d6-5da0-4cc4-b672-7a4996aa7a0b",
+  "meta": {
+    "instanceId": "6412cdd215e40f8104d65360d175114840ece97edc7aec67b6c82d9f6c1c0c00"
+  },
+  "nodeGroups": [],
+  "id": "nlxjRq1sbEo0jMVf",
+  "tags": []
+}
