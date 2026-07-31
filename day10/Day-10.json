@@ -1,0 +1,147 @@
+{
+  "name": "Day-10",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "a95ec692-7cad-4138-9596-3b0de7126df5",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8ecf86b5-e187-42ff-af04-64349db81a75",
+      "name": "Webhook",
+      "webhookId": "a95ec692-7cad-4138-9596-3b0de7126df5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "59bd01df-ad55-4eb9-a9d0-31b9e6152d4f",
+              "leftValue": "={{ $json.body.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "6c078698-d6b6-4765-b7d0-44abd60dbc53",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c9d6044e-e662-410b-8c3e-5348ce46dd77",
+              "name": "status",
+              "value": "Record Saved",
+              "type": "string"
+            },
+            {
+              "id": "f111ce7a-cf7a-4a61-889c-6f9ebfffba4d",
+              "name": "saved_email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        -96
+      ],
+      "id": "b9120437-e449-46a8-b8d2-78bde7d036bd",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"confirmation\": \"Success! Your data has been securely saved.\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        624,
+        -96
+      ],
+      "id": "ac7a78fc-6ee3-4497-9729-90ae312585b5",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "77345f1f-d8db-470a-9624-034a3cddac62",
+  "meta": {
+    "instanceId": "6412cdd215e40f8104d65360d175114840ece97edc7aec67b6c82d9f6c1c0c00"
+  },
+  "nodeGroups": [],
+  "id": "jbepvI5R6XekxIog",
+  "tags": []
+}
