@@ -1,0 +1,431 @@
+{
+  "name": "Day-12 - Automated Lead Management System",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "519e2be1-8dfc-499a-9c16-240c2ac65013",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -816,
+        192
+      ],
+      "id": "26eee54f-3ce5-4868-b75c-885e0bf0c3a1",
+      "name": "Webhook",
+      "webhookId": "519e2be1-8dfc-499a-9c16-240c2ac65013"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "07200930-9a78-4d8f-8692-d4c9e76a8f82",
+              "leftValue": "={{ $json.body.name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "dd6a9df8-d7a5-4311-9149-13966f980d9e",
+              "leftValue": "={{ $json.body.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "784dd105-f0d3-4fae-9165-949d18b73c39",
+              "leftValue": "={{ $json.body.budget }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": "=",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -608,
+        192
+      ],
+      "id": "d2e62339-0cbd-4a91-9793-418966ca68c1",
+      "name": "Validation (IF)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e8405891-ee02-465a-8f6a-bf27f9fd9edb",
+              "name": "email",
+              "value": "={{ $json.body.email.toLowerCase() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -384,
+        64
+      ],
+      "id": "7f5da274-b859-4c24-9c4b-cde1a5004c49",
+      "name": "Lead Processing"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "high-priority-rule",
+                    "leftValue": "={{ $json.body.budget }}",
+                    "rightValue": 5000,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "med-priority-rule-min",
+                    "leftValue": "={{ $json.body.budget }}",
+                    "rightValue": 1000,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    }
+                  },
+                  {
+                    "id": "med-priority-rule-max",
+                    "leftValue": "={{ $json.body.budget }}",
+                    "rightValue": 4999,
+                    "operator": {
+                      "type": "number",
+                      "operation": "lte"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "low-priority-rule",
+                    "leftValue": "={{ $json.body.budget }}",
+                    "rightValue": 999,
+                    "operator": {
+                      "type": "number",
+                      "operation": "lte"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -176,
+        192
+      ],
+      "id": "6a4f88fe-95d1-4279-9e96-2d9ab73cfab3",
+      "name": "Lead Scoring (Switch)"
+    },
+    {
+      "parameters": {
+        "sendTo": "sales-team@company.com",
+        "subject": "=[HIGH PRIORITY LEAD] Urgent follow up required: {{ $json.body.company }}",
+        "emailType": "text",
+        "message": "=High Priority Lead Details:\n\nName: {{ $json.body.name }}\nEmail: {{ $json.email }}\nCompany: {{ $json.body.company }}\nService: {{ $json.body.service }}\nBudget: ${{ $json.body.budget }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        80,
+        0
+      ],
+      "id": "1f8e748f-c2d8-45cd-a5c8-d1034a290d15",
+      "name": "Immediate Sales Alert",
+      "webhookId": "0f3bd3eb-953d-41c1-aefa-8d6e54f03a23",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "fKxq6dydiaeyf19r",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1YnjIzDammutgkSgQAq3HNWkqxQQ-lwVttkxYrPWD0LY",
+          "mode": "list",
+          "cachedResultName": "Day-12-mini-project",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YnjIzDammutgkSgQAq3HNWkqxQQ-lwVttkxYrPWD0LY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Lead DB",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YnjIzDammutgkSgQAq3HNWkqxQQ-lwVttkxYrPWD0LY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        80,
+        192
+      ],
+      "id": "bdd811e5-c936-44c9-bf59-aa2cb29674b5",
+      "name": "Save to Lead DB",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fDgqzs7BK5MZNX6H",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1YnjIzDammutgkSgQAq3HNWkqxQQ-lwVttkxYrPWD0LY",
+          "mode": "list",
+          "cachedResultName": "Day-12-mini-project",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YnjIzDammutgkSgQAq3HNWkqxQQ-lwVttkxYrPWD0LY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2017672685,
+          "mode": "list",
+          "cachedResultName": "Nurture List",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1YnjIzDammutgkSgQAq3HNWkqxQQ-lwVttkxYrPWD0LY/edit#gid=2017672685"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        80,
+        384
+      ],
+      "id": "49688291-47e3-4e45-b304-1cca236a20c8",
+      "name": "Add to Nurture List",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fDgqzs7BK5MZNX6H",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook').item.json.body.email }}",
+        "subject": "Thank you for reaching out!",
+        "emailType": "text",
+        "message": "=Hi {{ $('Webhook').item.json.body.name }},\n\nThank you for contacting us regarding {{ $('Webhook').item.json.body.service }}. We have received your request and our team will review your details shortly.\n\nBest regards,\nAutomated Lead System",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        336,
+        192
+      ],
+      "id": "7c8e2abb-40e4-4c15-ad48-e3dda51879ff",
+      "name": "Send Acknowledgment Email",
+      "webhookId": "d76c287a-e797-4290-9ab0-d77e067470ac",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "fKxq6dydiaeyf19r",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validation (IF)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation (IF)": {
+      "main": [
+        [
+          {
+            "node": "Lead Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Processing": {
+      "main": [
+        [
+          {
+            "node": "Lead Scoring (Switch)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Scoring (Switch)": {
+      "main": [
+        [
+          {
+            "node": "Immediate Sales Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save to Lead DB",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add to Nurture List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Immediate Sales Alert": {
+      "main": [
+        [
+          {
+            "node": "Send Acknowledgment Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Lead DB": {
+      "main": [
+        [
+          {
+            "node": "Send Acknowledgment Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to Nurture List": {
+      "main": [
+        [
+          {
+            "node": "Send Acknowledgment Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "e7a546c4-c48f-4ab6-a6d8-6c72a29cfc9c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6412cdd215e40f8104d65360d175114840ece97edc7aec67b6c82d9f6c1c0c00"
+  },
+  "nodeGroups": [],
+  "id": "su5377u5cf6lOwyb",
+  "tags": []
+}
