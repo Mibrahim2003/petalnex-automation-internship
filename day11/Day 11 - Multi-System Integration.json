@@ -1,0 +1,231 @@
+{
+  "name": "Day 11 - Multi-System Integration",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "day-11-lead",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "91b83bf9-4c7b-4ab2-915b-20aaab26bb4d",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        96,
+        32
+      ],
+      "webhookId": "d8476d79-bf22-41d3-a55b-8d819229d561"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "59bd01df-ad55-4eb9-a9d0-31b9e6152d4f",
+              "leftValue": "={{ $json.body.name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "74842925-548c-413e-9084-6614711a94ef",
+      "name": "Validate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        320,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.agify.io",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $('Webhook').item.json.body.name }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8f440e11-5b81-4d2c-a65f-64a4979197d4",
+      "name": "API Lookup / Enrich",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        544,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "04b499a2-30bc-418c-8eea-7ba0c4847bc3",
+              "name": "lead_name",
+              "value": "={{ $('Webhook').item.json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "c9d6044e-e662-410b-8c3e-5348ce46dd77",
+              "name": "lead_email",
+              "value": "={{ $('Webhook').item.json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "d8e7f6g5-h4i3-j2k1-l0m9-n8o7p6q5r4s3",
+              "name": "enriched_age_estimate",
+              "value": "={{ $json.age }}",
+              "type": "number"
+            },
+            {
+              "id": "f111ce7a-cf7a-4a61-889c-6f9ebfffba4d",
+              "name": "status",
+              "value": "Enriched & Processed",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8c190758-1214-408c-9fa8-fa87cd13ad2d",
+      "name": "Save Lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        768,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"Success\",\n  \"message\": \"Lead successfully enriched, saved, and notified!\",\n  \"data\": {{ JSON.stringify($json) }}\n}",
+        "options": {}
+      },
+      "id": "a14101ed-f9cb-4f88-a9dd-a7f82f9118c4",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1184,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "ibrahimnewacc03@gmail.com",
+        "subject": "New enritched lead.",
+        "emailType": "text",
+        "message": "=Hello Petalnex Team,  A new lead has been processed: Name: {{$json.lead_name}} Email: {{$json.lead_email}} Estimated Age (from Agify): {{$json.enriched_age_estimate}}  Status: {{$json.status}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        976,
+        -112
+      ],
+      "id": "0b275574-95f1-4c45-a608-ab4c479ef71a",
+      "name": "Send a message",
+      "webhookId": "2c3924b5-96ba-4162-9e78-bfd06cbf6c60",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "fKxq6dydiaeyf19r",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate": {
+      "main": [
+        [
+          {
+            "node": "API Lookup / Enrich",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API Lookup / Enrich": {
+      "main": [
+        [
+          {
+            "node": "Save Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Lead": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "40b45c18-29dc-4fcd-b26f-725487dde570",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6412cdd215e40f8104d65360d175114840ece97edc7aec67b6c82d9f6c1c0c00"
+  },
+  "nodeGroups": [],
+  "id": "hvpK8yqwCRz7ppJH",
+  "tags": []
+}
