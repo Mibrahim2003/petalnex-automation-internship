@@ -1,0 +1,12 @@
+Classification Tasks:
+For classification workloads—such as categorizing incoming emails, determining customer sentiment, or routing support tickets within an automation pipeline—I would utilize Groq.
+
+The primary requirement for classification is usually speed and high throughput rather than deep reasoning over massive documents. Groq runs on specialized LPU (Language Processing Unit) hardware, which provides exceptionally fast inference speeds and low latency. Because classification prompts are typically short and require near-instantaneous responses to keep automation workflows moving efficiently, Groq is the ideal provider to handle these rapid-fire decisions at scale.
+
+Long-Context Work
+For long-context tasks—such as summarizing massive PDF reports, analyzing extensive codebases, or extracting specific data points from hours of meeting transcripts—I would use Google Gemini.
+
+Models hosted on Groq (like Llama 3) are incredibly fast but are generally constrained by smaller context windows (often 8k to 128k tokens). In contrast, Gemini models feature massive context windows (up to 1 to 2 million tokens for Gemini 1.5 Pro and Flash). This allows Gemini to ingest entire textbooks, multiple documents, or large repository folders all at once without losing structural understanding or "forgetting" earlier information.
+
+Conclusion
+In a production environment, the most efficient architecture utilizes both: Groq for instantaneous, short-prompt routing and classification, and Gemini for heavy, document-intensive analysis.
