@@ -1,0 +1,420 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": []
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -512,
+        -160
+      ],
+      "id": "f3e86d59-ca3d-4ea5-846b-c244feb6cf3c",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "UDpesnChi9cKoozf",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an email classification assistant.\n\nClassify the email into exactly one of these categories:\nSales, Support, Complaint, Invoice, Spam, General\n\nReturn only the category name. No punctuation. No explanation. No extra words.\n\nUse these rules:\n\nSales:\nThe sender wants to buy, ask for pricing, request a demo, ask about services, or show clear buying interest.\n\nSupport:\nThe sender needs help, has a technical issue, asks how to do something, reports a bug, or wants assistance.\n\nComplaint:\nThe sender is unhappy, angry, frustrated, or reporting a bad experience.\n\nInvoice:\nThe sender mentions billing, payment, invoice, receipt, refund, tax, charges, or account payment issues.\n\nSpam:\nThe email is unsolicited, promotional junk, phishing-like, scam-like, or clearly irrelevant.\n\nGeneral:\nNone of the above clearly apply.\n\nDecision order:\n1. Spam\n2. Invoice\n3. Complaint\n4. Support\n5. Sales\n6. General\n\nEmail:\nSubject: {{$json.subject}}\nBody: {{$json.body}}\n",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are an email classification assistant.\n\nClassify the email into exactly one of these categories:\nSales, Support, Complaint, Invoice, Spam, General\n\nReturn only the category name. No punctuation. No explanation. No extra words.\n\nUse these rules:\n\nSales:\nThe sender wants to buy, ask for pricing, request a demo, ask about services, or show clear buying interest.\n\nSupport:\nThe sender needs help, has a technical issue, asks how to do something, reports a bug, or wants assistance.\n\nComplaint:\nThe sender is unhappy, angry, frustrated, or reporting a bad experience.\n\nInvoice:\nThe sender mentions billing, payment, invoice, receipt, refund, tax, charges, or account payment issues.\n\nSpam:\nThe email is unsolicited, promotional junk, phishing-like, scam-like, or clearly irrelevant.\n\nGeneral:\nNone of the above clearly apply.\n\nDecision order:\n1. Spam\n2. Invoice\n3. Complaint\n4. Support\n5. Sales\n6. General\n\nEmail:\nSubject: {{$json.subject}}\nBody: {{$json.body}}\n"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -288,
+        -160
+      ],
+      "id": "37ef200b-7400-497c-a5ea-8f048841dc77",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -288,
+        32
+      ],
+      "id": "01d9d81f-67dc-45ff-8041-327ec97d58af",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1EgU3ai4PuLycEmH",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ ($json.text || '').toString().trim() }}",
+        "rules": {
+          "rules": [
+            {
+              "operation": "equal",
+              "value2": "Sales",
+              "outputKey": "Sales"
+            },
+            {
+              "operation": "equal",
+              "value2": "Support",
+              "outputKey": "Support"
+            },
+            {
+              "operation": "equal",
+              "value2": "Complaint",
+              "outputKey": "Complaint"
+            },
+            {
+              "operation": "equal",
+              "value2": "Invoice",
+              "outputKey": "Invoice"
+            },
+            {
+              "operation": "equal",
+              "value2": "Spam",
+              "outputKey": "Spam"
+            },
+            {
+              "operation": "equal",
+              "value2": "General",
+              "outputKey": "General"
+            }
+          ]
+        }
+      },
+      "name": "Route by category",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [
+        16,
+        -160
+      ],
+      "id": "74ea7bbf-97d2-45bf-af50-592db424cef3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "category",
+              "value": "Sales",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "route",
+              "value": "Sales",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "status",
+              "value": "classified",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Sales Route",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        256,
+        -384
+      ],
+      "id": "93adebc0-abb1-4c83-8217-972cf8f1cbb5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "category",
+              "value": "Support",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "route",
+              "value": "Support",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "status",
+              "value": "classified",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Support Route",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        256,
+        -272
+      ],
+      "id": "8f30ba46-f0cb-4938-92b2-440f52aa93e0"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "category",
+              "value": "Complaint",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "route",
+              "value": "Complaint",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "status",
+              "value": "classified",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Complaint Route",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        256,
+        -144
+      ],
+      "id": "12f25671-d9a4-4648-a0c0-82152864e15b"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "category",
+              "value": "Invoice",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "route",
+              "value": "Invoice",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "status",
+              "value": "classified",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Invoice Route",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        256,
+        -32
+      ],
+      "id": "a846dbc2-11f9-461a-b763-d4aabdaa0d94"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "category",
+              "value": "Spam",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "route",
+              "value": "Spam",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "status",
+              "value": "classified",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Spam Route",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        256,
+        96
+      ],
+      "id": "32f22aab-c893-46fd-93ed-f34a8605c72c"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "category",
+              "value": "General",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "route",
+              "value": "General",
+              "type": "string"
+            },
+            {
+              "id": "3",
+              "name": "status",
+              "value": "classified",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "General Route",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        256,
+        224
+      ],
+      "id": "ce474c89-27e8-43e6-b016-c6fca6b3aaea"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Route by category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by category": {
+      "main": [
+        [
+          {
+            "node": "Sales Route",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Support Route",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Complaint Route",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invoice Route",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Spam Route",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "General Route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5a9f603d-5a60-40e1-893b-a681ea1bf366",
+  "meta": {
+    "instanceId": "02d70ebd734b6d6222c70c77f231d6d79a54d93782dc313b5193f50440d34100"
+  },
+  "nodeGroups": [],
+  "id": "S22Y03Z43ikhk5CK",
+  "tags": []
+}
