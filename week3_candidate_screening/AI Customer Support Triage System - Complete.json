@@ -1,0 +1,822 @@
+{
+  "name": "AI Customer Support Triage System - Complete",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Customer Support Page",
+        "formDescription": "Please provide us information about what you are experiencing. We will try our best to reach out as soon as possible to fix your problem(s).",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Problem(s)",
+              "fieldType": "checkbox",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "charging_issue"
+                  },
+                  {
+                    "option": "battery_issue"
+                  },
+                  {
+                    "option": "connectivity_issue"
+                  },
+                  {
+                    "option": "sound_issue"
+                  },
+                  {
+                    "option": "microphone_issue"
+                  },
+                  {
+                    "option": "physical_damage"
+                  },
+                  {
+                    "option": "missing_item"
+                  },
+                  {
+                    "option": "order_delivery"
+                  },
+                  {
+                    "option": "refund_return"
+                  },
+                  {
+                    "option": "warranty_support"
+                  },
+                  {
+                    "option": "other"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Please write problem description.",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cd07036c-a87c-4ec2-b167-e8d359d44205",
+      "name": "On form submission",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        320
+      ],
+      "webhookId": "3bf69392-da63-4bd6-a8be-665b2d5f1124"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=ROLE\nYou are an AI customer support triage assistant for an earbuds company.\n\nCONTEXT\nYou receive a customer support submission with:\n- Problem(s): a short selected issue type or issue label\n- Please write problem description: the customer’s detailed explanation\n\nThe customer’s name and email are not needed for analysis. They will be stored separately in the ticket system.\n\nTASK\nAnalyze the customer’s issue and produce a structured triage result.\nYou must:\n1. Identify the best matching category\n2. Assign a priority level\n3. Detect the sentiment\n4. Choose the correct department\n5. Write a short summary\n6. Write a short suggested response\n7. Decide whether this needs an urgent alert\n\nRULES\n- Use only the information in the input.\n- Do not invent details.\n- Keep the output practical and consistent.\n- Return only valid JSON.\n- Do not add markdown, code fences, or extra text.\n- Use the exact category names from the list below.\n- If the issue is unclear, choose the closest category and set priority to medium.\n- If the customer says the product is unsafe, overheats, stops working completely, or may be damaged in a serious way, set urgent_alert to true.\n- If the issue is about a wrong delivery, refund, warranty, or order status, route it to the correct department.\n- Keep suggested_response polite, short, and helpful.\n\nCATEGORY LIST\nUse one of these exact values for category:\n- charging_issue\n- battery_issue\n- connectivity_issue\n- sound_issue\n- microphone_issue\n- physical_damage\n- missing_item\n- order_delivery\n- refund_return\n- warranty_support\n- other\n\nPRIORITY RULES\nUse one of these exact values for priority:\n- urgent\n- high\n- medium\n- low\n\nDepartment rules:\n- technical_support for charging_issue, battery_issue, connectivity_issue, sound_issue, microphone_issue, physical_damage\n- shipping for order_delivery, missing_item\n- billing for refund_return\n- warranty for warranty_support\n- general_support for other\n\n\nOUTPUT GUIDELINES\n- category: one of the exact category values above\n- priority: one of urgent, high, medium, low\n- sentiment: positive, neutral, negative, angry, frustrated, confused\n- department: one of the exact department values above\n- summary: 1 short sentence\n- suggested_response: 1 to 2 short sentences\n- urgent_alert: true or false\n- confidence: a number from 0 to 1\n\nEXAMPLE INPUT\nProblem(s): Not Charging\nPlease write problem description: My earbuds are not charging even after using the original cable.\n\nEXAMPLE OUTPUT\n{\n  \"category\": \"charging_issue\",\n  \"priority\": \"high\",\n  \"sentiment\": \"frustrated\",\n  \"department\": \"technical_support\",\n  \"summary\": \"The customer says the earbuds are not charging.\",\n  \"suggested_response\": \"Sorry for the trouble. Please try a different charger and cable, then send us a photo or video if the issue continues.\",\n  \"urgent_alert\": false,\n  \"confidence\": 0.97\n}\n\nNOW ANALYZE THIS SUBMISSION:\nProblem(s): {{$json[\"Problem(s)\"][0]}}\nPlease write problem description: {{ $json['Please write problem description.'] }}",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "id": "993d6ff1-eaae-4e08-b1b4-cabe73545f2e",
+      "name": "Basic LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        224,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "42a052b8-a12b-4cfa-b631-aad0adaadeb6",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        544
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1EgU3ai4PuLycEmH",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"category\": \"string\",\n  \"priority\": \"string\",\n  \"sentiment\": \"string\",\n  \"department\": \"string\",\n  \"summary\": \"string\",\n  \"suggested_response\": \"string\",\n  \"urgent_alert\": \"boolean\",\n  \"confidence\": \"number\"\n}"
+      },
+      "id": "e1d62cad-1214-4da5-bf58-6150290e957e",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        400,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "charging_issue",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0609cdc7-6800-45b1-97a3-07e70af89af6"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "charging_issue"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "08e921c7-3bbd-4929-badd-9ac19571ef08",
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "battery_issue",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "battery_issue"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b0d37fa0-11b8-428b-bed3-74c4068bd89d",
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "connectivity_issue",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "connectivity_issue"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "8071ebcb-a8bc-4a23-8bcb-cea9f7044019",
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "sound_issue",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "sound_issue"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "05fffc65-f8d5-4c16-9056-de71c31c5447",
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "microphone_issue",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "microphone_issue"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "fe15534e-86f9-4d25-8fe3-f800213832e8",
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "physical_damage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "physical_damage"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "304cfd0f-5246-4c7a-93ee-71476f62cf51",
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "missing_item",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "missing_item"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "75bb56f1-a2a1-45ee-830e-0eae9fe0a74b",
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "order_delivery",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "order_delivery"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "92fde392-2066-4b24-94d1-11d0183e71e5",
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "refund_return",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "refund_return"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "64f76353-9468-4f61-8f67-97dc58544bb3",
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "warranty_support",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "warranty_support"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "13e6e12a-f37a-4fc3-8697-0bd693eca7a5",
+                    "leftValue": "={{ $json.output.category }}",
+                    "rightValue": "other",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "other"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2f37d671-ec69-4cec-927f-09faa7ad6a66",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        176
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1kNJx-aE6crxkXxXlQ5qdU0bsV-eXVi5RrDnZNP6Gu4s",
+          "mode": "list",
+          "cachedResultName": "Tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1kNJx-aE6crxkXxXlQ5qdU0bsV-eXVi5RrDnZNP6Gu4s/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1kNJx-aE6crxkXxXlQ5qdU0bsV-eXVi5RrDnZNP6Gu4s/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('On form submission').item.json.Name }}",
+            "Email": "={{ $('On form submission').item.json.Email }}",
+            "Problem(s)": "={{ $('On form submission').item.json['Problem(s)'] }}",
+            "Please write problem description": "={{ $('On form submission').item.json['Please write problem description.'] }}",
+            "category": "={{ $('Basic LLM Chain').item.json.output.category }}",
+            "priority": "={{ $('Basic LLM Chain').item.json.output.priority }}",
+            "sentiment": "={{ $('Basic LLM Chain').item.json.output.sentiment }}",
+            "department": "={{ $('Basic LLM Chain').item.json.output.department }}",
+            "summary": "={{ $('Basic LLM Chain').item.json.output.summary }}",
+            "suggested_response": "={{ $('Basic LLM Chain').item.json.output.suggested_response }}",
+            "urgent_alert": "={{ $('Basic LLM Chain').item.json.output.urgent_alert }}",
+            "confidence": "={{ $('Basic LLM Chain').item.json.output.confidence }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Problem(s)",
+              "displayName": "Problem(s)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Please write problem description",
+              "displayName": "Please write problem description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sentiment",
+              "displayName": "sentiment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "department",
+              "displayName": "department",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "suggested_response",
+              "displayName": "suggested_response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "urgent_alert",
+              "displayName": "urgent_alert",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "confidence",
+              "displayName": "confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "de51cbd5-9202-425b-be3a-2d5e5fc3dbed",
+      "name": "Append row in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        288
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "UTKHsATTAqgpicVl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json.Email }}",
+        "subject": "={{ 'Support ticket received - ' + $('Basic LLM Chain').item.json.output.category }}",
+        "emailType": "text",
+        "message": "={{ 'Hi ' + $('On form submission').item.json.Name + ',\\n\\nWe have received your support request.\\n\\nTicket category: ' + $('Basic LLM Chain').item.json.output.category + '\\nPriority: ' + $('Basic LLM Chain').item.json.output.priority + '\\n\\nSummary: ' + $('Basic LLM Chain').item.json.output.summary + '\\n\\nOur ' + $('Basic LLM Chain').item.json.output.department + ' team will review your request.\\n\\nSuggested next step: ' + $('Basic LLM Chain').item.json.output.suggested_response + '\\n\\nThank you,\\nCustomer Support' }}",
+        "options": {}
+      },
+      "id": "1e1cd270-837c-4f46-b797-fab92d2d574c",
+      "name": "Send Acknowledgement",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1088,
+        288
+      ],
+      "webhookId": "ca68a43f-df9a-461c-b429-636fb087fa43",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "UDpesnChi9cKoozf",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "urgent-alert-condition",
+              "leftValue": "={{ String($('Basic LLM Chain').item.json.output.urgent_alert).toLowerCase() === 'true' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "31528901-7133-4aef-9982-6e3ca0f11546",
+      "name": "Urgent Alert?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "support@airbirds.example",
+        "subject": "={{ 'URGENT CUSTOMER SUPPORT ALERT - ' + $('Basic LLM Chain').item.json.output.category }}",
+        "emailType": "text",
+        "message": "={{ 'URGENT CUSTOMER SUPPORT ALERT\\n\\nCustomer: ' + $('On form submission').item.json.Name + '\\nEmail: ' + $('On form submission').item.json.Email + '\\nCategory: ' + $('Basic LLM Chain').item.json.output.category + '\\nPriority: ' + $('Basic LLM Chain').item.json.output.priority + '\\nDepartment: ' + $('Basic LLM Chain').item.json.output.department + '\\nSentiment: ' + $('Basic LLM Chain').item.json.output.sentiment + '\\nConfidence: ' + $('Basic LLM Chain').item.json.output.confidence + '\\n\\nSummary:\\n' + $('Basic LLM Chain').item.json.output.summary + '\\n\\nOriginal problem:\\n' + $('On form submission').item.json['Please write problem description.'] }}",
+        "options": {}
+      },
+      "id": "6bbe90bb-e8c0-4a27-9112-9ae21f656d08",
+      "name": "Send Urgent Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1120,
+        512
+      ],
+      "webhookId": "9f75c52b-1a0b-4842-b0d3-b8146c1cb57b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "UDpesnChi9cKoozf",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Urgent Alert?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send Acknowledgement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Urgent Alert?": {
+      "main": [
+        [
+          {
+            "node": "Send Urgent Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "f974ec0a-1d6e-43c9-951c-8acb4a9e530a",
+  "meta": {
+    "instanceId": "02d70ebd734b6d6222c70c77f231d6d79a54d93782dc313b5193f50440d34100"
+  },
+  "nodeGroups": [],
+  "id": "KJZ4uW6mrh38YnNe",
+  "tags": []
+}

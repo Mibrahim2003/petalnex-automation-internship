@@ -1,0 +1,63 @@
+[
+  
+{
+  
+  
+"action": "parse",
+  
+  
+"response": {
+  
+  
+  
+"output": {
+  
+  
+  
+  
+"category": "physical_damage",
+  
+  
+  
+  
+"priority": "high",
+  
+  
+  
+  
+"sentiment": "frustrated",
+  
+  
+  
+  
+"department": "technical_support",
+  
+  
+  
+  
+"summary": "The customer is reporting a cracked charging case lid and wishes to return the product.",
+  
+  
+  
+  
+"suggested_response": "We are sorry to hear that your product arrived damaged. Please provide a photo of the cracked lid so we can assist you with a return or replacement.",
+  
+  
+  
+  
+"urgent_alert": "false",
+  
+  
+  
+  
+"confidence": "0.98"
+  
+  
+  
+}
+  
+  
+}
+  
+}
+]
