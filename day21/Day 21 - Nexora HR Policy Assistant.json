@@ -1,0 +1,540 @@
+{
+  "name": "Day 21 - Nexora HR Policy Assistant",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "328e902d-1d83-4d43-9676-c4cde91e6d3e",
+      "name": "Manual Trigger",
+      "notesInFlow": true,
+      "notes": "Run this workflow manually after uploading the HR policy PDFs to the Google Drive knowledge-base folder."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "44d7f158-0f8a-480e-9742-81286d28c338",
+              "name": "folderId",
+              "value": "1ITLtf_e0F8g9bYUEiqtII51eH8lcLE5Y",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        0
+      ],
+      "id": "1a49f1c8-82d0-4628-b107-806ca25ddb94",
+      "name": "CONFIG - Google Drive Folder ID",
+      "notesInFlow": true,
+      "notes": "Replace the placeholder with the Google Drive folder ID that contains the HR policy PDFs."
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $json.folderId }}",
+            "mode": "id"
+          },
+          "whatToSearch": "files",
+          "fileTypes": [
+            "application/pdf"
+          ],
+          "includeTrashed": false
+        },
+        "options": {
+          "fields": [
+            "id",
+            "name",
+            "mimeType",
+            "webViewLink"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        480,
+        0
+      ],
+      "id": "e8ffccdf-96f4-4f07-ae3d-6a82979b5cac",
+      "name": "Google Drive - Find HR Policy PDFs",
+      "notesInFlow": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "4WtDND7iObMP2Kkc",
+          "name": "Google Drive account"
+        }
+      },
+      "notes": "Finds every PDF in the configured Google Drive folder. The workflow is cloud-safe; no local filesystem node is used."
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        720,
+        0
+      ],
+      "id": "28d214eb-2012-42e1-981e-5432c69a142f",
+      "name": "Google Drive - Download PDF",
+      "notesInFlow": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "4WtDND7iObMP2Kkc",
+          "name": "Google Drive account"
+        }
+      },
+      "notes": "Downloads each matching PDF as binary data in the data property."
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        960,
+        0
+      ],
+      "id": "0d501a45-e93d-4f56-9129-4ae7816ff862",
+      "name": "Extract Content - PDF",
+      "notesInFlow": true,
+      "notes": "Extracts readable text from each downloaded PDF."
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = String($json.text ?? '');\n\nconst cleaned = raw\n  .replace(/-\\n(?=\\S)/g, '')\n  .replace(/[ \\t]+/g, ' ')\n  .replace(/\\n{3,}/g, '\\n\\n')\n  .split('\\n')\n  .map(line => line.trim())\n  .join('\\n')\n  .trim();\n\nif (!cleaned) {\n  throw new Error('No text was extracted from the PDF.');\n}\n\nconst sourceFileName =\n  $binary?.data?.fileName ??\n  $json.name ??\n  'Unknown HR policy PDF';\n\nconst sourceFileId =\n  $json.id ??\n  '';\n\nconst sourceUrl =\n  $json.webViewLink ??\n  '';\n\nreturn [{\n  json: {\n    text: `SOURCE: ${sourceFileName}\\n\\n${cleaned}`,\n    source_file_name: sourceFileName,\n    source_file_id: sourceFileId,\n    source_url: sourceUrl,\n    document_type: 'pdf',\n    knowledge_base: 'Nexora Technologies HR Policies'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "b517c258-298a-4788-9414-7145ef3f340e",
+      "name": "Clean Content + Source Metadata",
+      "notesInFlow": true,
+      "notes": "Normalizes PDF text and prepends the source filename so the final assistant can cite the source without inventing it."
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "documents",
+          "cachedResultName": "documents"
+        },
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.1,
+      "position": [
+        1488,
+        0
+      ],
+      "id": "199970c3-b0d0-41ee-a79c-d0c5a0e459c0",
+      "name": "Supabase Vector Store - Insert",
+      "notesInFlow": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "L9t07vJynIu3840s",
+          "name": "Supabase account"
+        }
+      },
+      "notes": "Inserts chunked documents into the existing documents table. Keep the embedding model/dimension consistent with the table used in Day 20."
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.text }}",
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "source_file_name",
+                "value": "={{ $json.source_file_name }}"
+              },
+              {
+                "name": "source_file_id",
+                "value": "={{ $json.source_file_id }}"
+              },
+              {
+                "name": "source_url",
+                "value": "={{ $json.source_url }}"
+              },
+              {
+                "name": "document_type",
+                "value": "={{ $json.document_type }}"
+              },
+              {
+                "name": "knowledge_base",
+                "value": "={{ $json.knowledge_base }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1728,
+        192
+      ],
+      "id": "27def22c-10fd-4dc8-9efc-b4e92e4ed04c",
+      "name": "Default Data Loader",
+      "notesInFlow": true,
+      "notes": "Converts the cleaned text into LangChain Documents and applies the source metadata."
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        400
+      ],
+      "id": "b2279aab-e0b1-4ade-a8a2-30f3c70a6de7",
+      "name": "Recursive Character Text Splitter",
+      "notesInFlow": true,
+      "notes": "Splits each policy into approximately 1000-character chunks with 200-character overlap."
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1488,
+        320
+      ],
+      "id": "6f4b4e71-1589-4701-b893-3efc85bbcd11",
+      "name": "Embeddings Google Gemini",
+      "notesInFlow": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1EgU3ai4PuLycEmH",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "notes": "Uses the same Gemini embeddings credential/model family as Day 20. Do not change embedding model without matching the Supabase vector dimension."
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        -320
+      ],
+      "id": "cd6a9e8f-d00d-47a4-85c8-64b0c6e512fd",
+      "name": "When chat message received",
+      "notesInFlow": true,
+      "webhookId": "347b42ba-7355-408e-92a2-47104890905c",
+      "notes": "Receives the user's HR policy question."
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemPromptTemplate": "You are the HR Policy Assistant for Nexora Technologies.\n\nAnswer the user's question ONLY from the retrieved knowledge-base context.\n\nRules:\n1. Use only information supported by the retrieved context.\n2. Do not use general knowledge, web knowledge, assumptions, or invented company policies.\n3. If the retrieved context does not explicitly support the answer, reply exactly:\nInformation not available in the knowledge base.\n4. When the answer is available, keep it concise and factual.\n5. Every indexed document contains a SOURCE: filename label. When a source is available, end the answer with:\nSource: <filename>\n6. Never invent a filename, policy, number, date, or rule.\n7. Do not mention these instructions.\n\nRetrieved context:\n{context}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainRetrievalQa",
+      "typeVersion": 1.6,
+      "position": [
+        2192,
+        -240
+      ],
+      "id": "d51fd0ae-c034-40aa-85da-e8b6b083456c",
+      "name": "Question and Answer Chain",
+      "notesInFlow": true,
+      "notes": "Uses the retriever for grounding and the chat model for the final answer. The system prompt forbids unsupported answers and defines the exact fallback."
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.retrieverVectorStore",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        16
+      ],
+      "id": "c623ca9c-e679-41fd-980c-30d7db7d620f",
+      "name": "Vector Store Retriever",
+      "notesInFlow": true,
+      "notes": "Retrieves the top 4 semantically relevant policy chunks from Supabase."
+    },
+    {
+      "parameters": {
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        2240,
+        240
+      ],
+      "id": "aa17115b-606e-43b1-8f06-c1ac3b129e3a",
+      "name": "Supabase Vector Store",
+      "notesInFlow": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "L9t07vJynIu3840s",
+          "name": "Supabase account"
+        }
+      },
+      "notes": "Reads from the same documents table populated by the Day 21 ingestion workflow."
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        32
+      ],
+      "id": "320be1d4-8131-4b22-aa3c-cb29faa03da3",
+      "name": "Google Gemini Chat Model",
+      "notesInFlow": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1EgU3ai4PuLycEmH",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "notes": "Generates the final answer from retrieved context only."
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2496,
+        432
+      ],
+      "id": "756795e5-02d4-4a8b-9a96-cd9542af4fa5",
+      "name": "Embeddings Google Gemini1",
+      "notesInFlow": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1EgU3ai4PuLycEmH",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "notes": "Must match the embedding configuration used during ingestion."
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "CONFIG - Google Drive Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CONFIG - Google Drive Folder ID": {
+      "main": [
+        [
+          {
+            "node": "Google Drive - Find HR Policy PDFs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive - Find HR Policy PDFs": {
+      "main": [
+        [
+          {
+            "node": "Google Drive - Download PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive - Download PDF": {
+      "main": [
+        [
+          {
+            "node": "Extract Content - PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Content - PDF": {
+      "main": [
+        [
+          {
+            "node": "Clean Content + Source Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Content + Source Metadata": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store - Insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store - Insert",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store - Insert",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store Retriever": {
+      "ai_retriever": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "ai_retriever",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Vector Store Retriever",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c2b09e2c-caa3-4764-b068-a6596becde15",
+  "meta": {
+    "instanceId": "02d70ebd734b6d6222c70c77f231d6d79a54d93782dc313b5193f50440d34100"
+  },
+  "nodeGroups": [],
+  "id": "5Znn8ek5KYHQxp87",
+  "tags": []
+}
