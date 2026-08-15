@@ -1,0 +1,214 @@
+{
+  "name": "My workflow 4",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        960,
+        544
+      ],
+      "id": "40ce1276-7e17-49bb-991e-30e0e9b9e25a",
+      "name": "When chat message received",
+      "webhookId": "f0731528-f930-4b45-9ce4-7b52d0e818df"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "You are a helpful knowledge-base assistant.\n\nYour job is to answer the user accurately using the available Knowledge Base Search tool.\n\nRules:\n1. Use the Knowledge Base Search tool whenever the question may require information from the knowledge base.\n2. Base factual answers on information retrieved from the knowledge base.\n3. Never invent, assume, or fabricate information.\n4. If the knowledge base does not contain enough information, clearly say you do not have enough information.\n5. Use conversation memory when a user refers to earlier messages.\n6. Do not claim to have searched the knowledge base if you did not use the tool.\n7. Answer directly and concisely. Do not reveal internal reasoning or tool-selection steps."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1184,
+        544
+      ],
+      "id": "474fb52d-57da-44a9-bf36-7252427e52cf",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1136,
+        768
+      ],
+      "id": "a23155c1-ad1e-4a74-8c5f-22546b46e83e",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1EgU3ai4PuLycEmH",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('When chat message received').item.json.sessionId }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        1280,
+        832
+      ],
+      "id": "6ae13752-7cdb-4a8b-ba65-71857d9c0cf5",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search the company knowledge base for relevant information to answer the user. Use this tool for questions that may be answered by the stored documents. Return only information supported by the retrieved documents; do not invent facts.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        1440,
+        768
+      ],
+      "id": "75d7ac42-dfff-4e1f-b3e5-5d5225e3e18f",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "L9t07vJynIu3840s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        976
+      ],
+      "id": "e5b6e3d8-dba8-4901-83f9-cb9a6cd5f010",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1EgU3ai4PuLycEmH",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "message": "={{ $('AI Agent').item.json.output }}",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        1552,
+        544
+      ],
+      "id": "8ad22e30-283b-4d01-9196-28d1267ac727",
+      "name": "Respond to Chat",
+      "webhookId": "385e5fda-e68a-4a78-bcab-b620b471b881"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9137adb9-2555-4f57-95a6-c0dca9ec6325",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "02d70ebd734b6d6222c70c77f231d6d79a54d93782dc313b5193f50440d34100"
+  },
+  "nodeGroups": [],
+  "id": "pcvddwaRBy1557f2",
+  "tags": []
+}
