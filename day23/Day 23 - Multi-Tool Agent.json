@@ -1,0 +1,341 @@
+{
+  "name": "Day 23 - Multi-Tool Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        48,
+        144
+      ],
+      "id": "c3164995-d34d-45cb-ba8c-5332b908dfe3",
+      "name": "When chat message received",
+      "webhookId": "f0731528-f930-4b45-9ce4-7b52d0e818df"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "You are a reliable company support agent with multiple tools.\n\nChoose tools based on their descriptions and use the narrowest appropriate tool.\n\nTool routing rules:\n1. Knowledge Base Search: Use for company policies, procedures, benefits, rules, and internal documentation stored in the knowledge base.\n2. Weather API: Use only for current weather or other real-time external information supported by this API. Do not use it for company information.\n3. Employee Data Store: Use for individual employee records such as employee ID, name, department, or leave balance. Do not use it for general policy questions.\n4. Send Email with Approval: This is a sensitive action. It always requires human approval before the email is sent. Never bypass or simulate approval. If approval is denied, tell the user the action was not performed.\n\nGeneral rules:\n- Never invent facts.\n- Prefer tool results over assumptions.\n- Use conversation memory when earlier messages matter.\n- If the tools do not contain enough information, clearly say so.\n- Do not reveal internal reasoning or tool-selection steps.\n- Do not call a tool unnecessarily.\n- For sensitive actions, explain what will happen only if needed, then wait for the human approval mechanism.\n",
+          "maxIterations": 6
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        272,
+        144
+      ],
+      "id": "cad6d78f-1e39-44f7-a8ae-f402dda76154",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        48,
+        400
+      ],
+      "id": "bafd9817-2067-4490-8b63-a20982831a7f",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1EgU3ai4PuLycEmH",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('When chat message received').item.json.sessionId }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        208,
+        400
+      ],
+      "id": "a029ab90-5b88-43b0-a1ed-582c0d3c2637",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search the company knowledge base for relevant information to answer the user. Use this tool for questions that may be answered by the stored documents. Return only information supported by the retrieved documents; do not invent facts.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        336,
+        400
+      ],
+      "id": "ab412fee-a639-4d27-af69-bf9e2d207515",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "L9t07vJynIu3840s",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        336,
+        576
+      ],
+      "id": "a8bb7c32-9457-4a90-bd7c-1faf0f799425",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1EgU3ai4PuLycEmH",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "message": "={{ $('AI Agent').item.json.output }}",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        640,
+        144
+      ],
+      "id": "7365a5aa-490d-4ca9-9a5f-13eba63e9652",
+      "name": "Respond to Chat",
+      "webhookId": "385e5fda-e68a-4a78-bcab-b620b471b881"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get current weather information for a city using an external weather API. Use this tool only for real-time weather questions. Provide the city name as the city parameter. Do not use this tool for company policies or employee records.",
+        "url": "=https://wttr.in/{{ /*n8n-auto-generated-fromAI-override*/ $fromAI('city', `City name, for example Lahore`, 'string') }}?format=j1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        608,
+        400
+      ],
+      "id": "ffc8dcf2-ef0a-4e98-91c2-575efffae289",
+      "name": "Weather API Tool"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_DATA_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Agent Employee Records",
+          "cachedResultUrl": ""
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "employee_id",
+              "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('employee_id', `Employee ID such as EMP-001`, 'string') }}"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1,
+      "position": [
+        800,
+        400
+      ],
+      "id": "b04bb2f1-12ba-4867-98e8-3688e4dff899",
+      "name": "Employee Data Store Tool"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', `Recipient email address. For a demo, use your own email address.`, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', `Email subject`, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', `Email body to send after approval`, 'string') }}",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "Approve email",
+            "disapproveLabel": "Reject email"
+          }
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        992,
+        400
+      ],
+      "id": "c930b83a-12ce-4b29-9380-26e2303f0f48",
+      "name": "Send Email (Human Approval Required)",
+      "webhookId": "1332060b-35e4-4cde-87bb-2b4ee7ebc5c3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "UDpesnChi9cKoozf",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "SETUP REQUIRED AFTER IMPORT\n\nCreate an n8n Data Table named \"Agent Employee Records\" with columns:\nemployee_id (text)\nname (text)\ndepartment (text)\nleave_balance (number)\n\nAdd a few demo rows, then open Employee Data Store Tool and select that table.\n\nThis placeholder is intentional because Data Table IDs are workspace-specific and cannot be safely hardcoded in a portable JSON export.",
+        "height": 300,
+        "width": 360,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        848,
+        752
+      ],
+      "id": "51ad5c34-7c77-46f6-9a1d-a159bc290382",
+      "name": "Data Store Setup"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather API Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Employee Data Store Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email (Human Approval Required)": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ac4d7d0d-e47c-4df3-8d52-cf398a5eae79",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "02d70ebd734b6d6222c70c77f231d6d79a54d93782dc313b5193f50440d34100"
+  },
+  "nodeGroups": [],
+  "id": "iCzSuURkHvpoYEvZ",
+  "tags": []
+}
