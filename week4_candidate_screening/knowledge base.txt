@@ -1,0 +1,161 @@
+const entries = [
+  {
+    "title": "Working Hours",
+    "category": "HR",
+    "content": "Standard company working hours are Monday through Friday, 9:00 AM to 5:00 PM local time, with a one-hour lunch break. Teams may have different meeting schedules, but employees are expected to be available during core hours from 10:00 AM to 4:00 PM.",
+    "source": "Employee Handbook"
+  },
+  {
+    "title": "Remote Work Policy",
+    "category": "HR",
+    "content": "Eligible employees may work remotely up to three days per week with manager approval. Employees must maintain reliable internet access, protect confidential company information, and remain reachable during core hours while working remotely.",
+    "source": "Remote Work Policy"
+  },
+  {
+    "title": "Annual Leave",
+    "category": "Benefits",
+    "content": "Full-time employees receive 24 days of annual leave per calendar year. Leave should be requested through the company's leave process and approved by the employee's manager before the absence whenever practical.",
+    "source": "Employee Handbook"
+  },
+  {
+    "title": "Sick Leave",
+    "category": "Benefits",
+    "content": "Employees may take sick leave when they are unable to work because of illness or medical needs. Employees should notify their manager as early as possible and provide any documentation required by applicable company policy.",
+    "source": "Employee Handbook"
+  },
+  {
+    "title": "Public Holidays",
+    "category": "Benefits",
+    "content": "The company observes the public holidays published on its annual holiday calendar. The current holiday calendar is distributed by HR at the beginning of each calendar year.",
+    "source": "HR Holiday Calendar"
+  },
+  {
+    "title": "Parental Leave",
+    "category": "Benefits",
+    "content": "Eligible employees may request parental leave following the birth, adoption, or placement of a child. Employees should contact HR before the leave period where possible so that eligibility and scheduling can be confirmed.",
+    "source": "Benefits Guide"
+  },
+  {
+    "title": "Probation Period",
+    "category": "HR",
+    "content": "New full-time employees normally complete a three-month probation period. During probation, performance, attendance, conduct, and role fit are reviewed by the employee's manager.",
+    "source": "Employee Handbook"
+  },
+  {
+    "title": "Employee Onboarding",
+    "category": "HR",
+    "content": "New employees complete onboarding tasks covering identity verification, payroll setup, security training, required policies, equipment assignment, and an introduction to their team and manager.",
+    "source": "Onboarding Guide"
+  },
+  {
+    "title": "Notice Period",
+    "category": "HR",
+    "content": "Employees who resign are normally expected to provide 30 calendar days of written notice unless their employment agreement states otherwise. HR should be informed when notice is submitted.",
+    "source": "Employee Handbook"
+  },
+  {
+    "title": "Performance Reviews",
+    "category": "HR",
+    "content": "Formal performance reviews are normally conducted twice each year. Managers review goals, performance, development needs, and priorities for the next review period.",
+    "source": "Performance Management Policy"
+  },
+  {
+    "title": "Salary Payment",
+    "category": "Payroll",
+    "content": "Monthly salaries are normally paid on the last working day of each month. If the payment date falls on a bank holiday, payroll may process payment on the preceding working day.",
+    "source": "Payroll Policy"
+  },
+  {
+    "title": "Expense Reimbursement",
+    "category": "Finance",
+    "content": "Business expenses must be supported by receipts and submitted through the expense process within 15 calendar days of the expense. Manager approval is required before reimbursement is processed.",
+    "source": "Expense Policy"
+  },
+  {
+    "title": "Business Travel",
+    "category": "Finance",
+    "content": "Business travel should be approved by the employee's manager before booking. Employees should use reasonable-cost travel options and retain receipts for reimbursable expenses.",
+    "source": "Travel Policy"
+  },
+  {
+    "title": "Office Access",
+    "category": "Security",
+    "content": "Employees must use their assigned access credentials or badges to enter company offices. Access credentials must not be shared with other people, and lost badges should be reported to Facilities or Security immediately.",
+    "source": "Office Security Policy"
+  },
+  {
+    "title": "IT Equipment",
+    "category": "IT",
+    "content": "Company laptops and other assigned equipment are provided for business use and must be handled responsibly. Employees must report lost, stolen, or damaged equipment to IT as soon as possible.",
+    "source": "IT Equipment Policy"
+  },
+  {
+    "title": "Password Security",
+    "category": "Security",
+    "content": "Employees must use strong passwords, keep authentication credentials private, and use multi-factor authentication wherever company systems require it. Passwords must never be shared through email or chat.",
+    "source": "Information Security Policy"
+  },
+  {
+    "title": "Security Incident Reporting",
+    "category": "Security",
+    "content": "Suspected phishing, unauthorized access, data loss, malware, or other security incidents must be reported to the IT or Security team immediately. Employees should not investigate or delete evidence before reporting an incident.",
+    "source": "Information Security Policy"
+  },
+  {
+    "title": "Training Budget",
+    "category": "Learning",
+    "content": "Eligible employees may request up to 500 USD per calendar year for approved professional training, certifications, or conferences. Requests require manager approval before the expense is committed.",
+    "source": "Learning and Development Policy"
+  },
+  {
+    "title": "Promotion Policy",
+    "category": "HR",
+    "content": "Promotions are based on sustained performance, demonstrated skills, role requirements, business needs, and manager recommendations. Meeting time-in-role alone does not guarantee a promotion.",
+    "source": "Career Framework"
+  },
+  {
+    "title": "Overtime",
+    "category": "HR",
+    "content": "Employees should obtain manager approval before working significant overtime. Overtime treatment depends on the employee's role and applicable employment terms, so employees should contact HR when they are unsure how overtime is handled.",
+    "source": "Employee Handbook"
+  },
+  {
+    "title": "Code of Conduct",
+    "category": "Compliance",
+    "content": "Employees are expected to act honestly, respectfully, professionally, and in the company's best interests. Harassment, discrimination, retaliation, fraud, and deliberate misuse of company resources are prohibited.",
+    "source": "Code of Conduct"
+  },
+  {
+    "title": "Dress Code",
+    "category": "HR",
+    "content": "The company uses a smart-casual dress standard for normal office work. Employees may need more formal attire for client meetings, presentations, or other business events where professional dress is appropriate.",
+    "source": "Employee Handbook"
+  },
+  {
+    "title": "Benefits Enrollment",
+    "category": "Benefits",
+    "content": "New employees should complete benefits enrollment during the onboarding period. HR provides the enrollment deadline and plan information applicable to the employee.",
+    "source": "Benefits Guide"
+  },
+  {
+    "title": "HR Contact",
+    "category": "Support",
+    "content": "Questions about leave, benefits, workplace concerns, or employment policies should be directed to the HR team through the company's internal HR support channel.",
+    "source": "Employee Handbook"
+  }
+];
+return entries.map((entry, index) => {
+  const documentText = [
+    `Title: ${entry.title}`,
+    `Category: ${entry.category}`,
+    `Content: ${entry.content}`,
+    `Source: ${entry.source}`
+  ].join("\n");
+  return {
+    json: {
+      ...entry,
+      entry_id: `KB-${String(index + 1).padStart(3, '0')}`,
+      document_text: documentText
+    }
+  };
+});
