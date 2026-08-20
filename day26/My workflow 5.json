@@ -1,0 +1,174 @@
+{
+  "name": "My workflow 5",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "87296ff8-a101-466d-a380-c393caf8d6df",
+      "name": "When clicking ‘Execute Workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        288,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://httpbin.org/status/500",
+        "options": {}
+      },
+      "id": "eb359009-27fc-4f74-8fe3-9d7467b5ef7e",
+      "name": "API Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        496,
+        304
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error ? true : false }}"
+            }
+          ]
+        }
+      },
+      "id": "58833aa5-2b9e-4a8c-b69a-8eaf26220e8c",
+      "name": "Successful?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        688,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "success"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e7becc73-b8bf-4c44-93af-3313f4a3133a",
+      "name": "Continue",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        928,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "console.log('API Failed after retries:', $input.all()[0].json.error);\nreturn $input.all();"
+      },
+      "id": "2ccabc93-8727-4fdf-8700-e9de91fa1215",
+      "name": "Log Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        928,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "alert",
+              "value": "={{ $json.error.message }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fee3076e-3eca-4d65-a3bf-ff0f050d76e6",
+      "name": "Notify Admin",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        400
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute Workflow’": {
+      "main": [
+        [
+          {
+            "node": "API Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API Request": {
+      "main": [
+        [
+          {
+            "node": "Successful?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Successful?": {
+      "main": [
+        [
+          {
+            "node": "Continue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Error": {
+      "main": [
+        [
+          {
+            "node": "Notify Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f6accea0-feb7-4163-ba78-5f473d16e52b",
+  "meta": {
+    "instanceId": "02d70ebd734b6d6222c70c77f231d6d79a54d93782dc313b5193f50440d34100"
+  },
+  "nodeGroups": [],
+  "id": "45Ccmyh1MrLKlDnT",
+  "tags": []
+}
