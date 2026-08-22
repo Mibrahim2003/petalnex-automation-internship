@@ -1,0 +1,787 @@
+{
+  "name": "My workflow 2 - Human in the Loop",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Job Details",
+        "formDescription": "Fill this form, and we will get back to you at your provided email. Please check your emails daily.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Degree",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "BS Computer Science"
+                  },
+                  {
+                    "option": "BS Software Engineering"
+                  },
+                  {
+                    "option": "BS Artificial Intelligence"
+                  },
+                  {
+                    "option": "BS Data Science"
+                  },
+                  {
+                    "option": "BS Information Technology"
+                  },
+                  {
+                    "option": "BS Electrical Engineering"
+                  },
+                  {
+                    "option": "MS Computer Science"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Skills"
+            },
+            {
+              "fieldLabel": "Experience",
+              "fieldType": "number",
+              "fieldName": "years",
+              "placeholder": "eg. 1 year -  jsut type the number"
+            },
+            {
+              "fieldLabel": "Availability",
+              "placeholder": "2 weeks, 1 month etc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -720,
+        240
+      ],
+      "id": "5d6af288-45ea-4158-bec5-6874bb313525",
+      "name": "On form submission",
+      "webhookId": "ef634231-542d-4ef6-b0ab-f3f1c5b301a2"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1AOqWEY582pW-hJ1QRRuQgfK9OGWeCNe9p8RpcPpoU1k",
+          "mode": "list",
+          "cachedResultName": "Candidate Dataset",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AOqWEY582pW-hJ1QRRuQgfK9OGWeCNe9p8RpcPpoU1k/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 259172985,
+          "mode": "list",
+          "cachedResultName": "sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AOqWEY582pW-hJ1QRRuQgfK9OGWeCNe9p8RpcPpoU1k/edit#gid=259172985"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Degree",
+              "displayName": "Degree",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Skills",
+              "displayName": "Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Experience",
+              "displayName": "Experience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Availability",
+              "displayName": "Availability",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "submittedAt",
+              "displayName": "submittedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "years",
+              "displayName": "years",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "selection",
+              "displayName": "selection",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -512,
+        240
+      ],
+      "id": "312e6214-31f2-4dd0-b3fc-ef89d8428bd4",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ggmbvf9wZTPsqw5q",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "63d7f7b7-ad6a-4b03-9f4f-d470364b91fa",
+              "leftValue": "={{ $json.years }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -304,
+        240
+      ],
+      "id": "3c7aa46a-7850-4126-af62-a1ede9cb5cb9",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "495e5a9f-9d09-45b2-86ec-7d7386eb0f3e",
+              "leftValue": "={{ $('On form submission').item.json.Skills.toLowerCase() }}",
+              "rightValue": "javascript",
+              "operator": {
+                "type": "string",
+                "operation": "contains",
+                "name": "filter.operator.contains"
+              }
+            },
+            {
+              "id": "12f2814f-f6c7-47a6-8c9e-59192f24dd61",
+              "leftValue": "={{ $('On form submission').item.json.Skills.toLowerCase() }}",
+              "rightValue": "n8n",
+              "operator": {
+                "type": "string",
+                "operation": "contains",
+                "name": "filter.operator.contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -96,
+        432
+      ],
+      "id": "6b0e13b1-0dc2-4774-a655-f6834f986976",
+      "name": "skills check"
+    },
+    {
+      "parameters": {
+        "sendTo": "hr-manager@yourcompany.com",
+        "subject": "=Action Required: Review Candidate {{ $('On form submission').item.json.Name }}",
+        "emailType": "text",
+        "message": "=The AI logic has shortlisted a candidate.\n\nName: {{ $('On form submission').item.json.Name }}\nEmail: {{ $('On form submission').item.json.Email }}\nExperience: {{ $('On form submission').item.json.years }} years\nSkills: {{ $('On form submission').item.json.Skills }}\n\nPlease click one of the links below to approve or reject this candidate for an interview:\n\nApprove: {{ $execution.resumeUrl }}&decision=approve\n\nReject: {{ $execution.resumeUrl }}&decision=reject",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -80,
+        144
+      ],
+      "id": "8c2ccc28-deca-4fef-88c2-24c126c1fa5e",
+      "name": "Ask HR for Approval",
+      "webhookId": "bfeee0b5-6343-4f6e-a65c-4b9303f441c2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "uIDEkYl12HwL4lFP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        128,
+        144
+      ],
+      "id": "3a897a1c-acdc-4c24-bf53-6e9dc0d267d3",
+      "name": "Wait for Human Review",
+      "webhookId": "81cdf2c8-2e97-446e-a1a6-bd5f0b7c534a"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "dec-a1b2-c3d4",
+              "leftValue": "={{ $json.query.decision }}",
+              "rightValue": "approve",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        336,
+        144
+      ],
+      "id": "2559531c-14f3-43be-b11d-24d33d1e43d5",
+      "name": "Check Approval Decision"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1AOqWEY582pW-hJ1QRRuQgfK9OGWeCNe9p8RpcPpoU1k",
+          "mode": "list",
+          "cachedResultName": "Candidate Dataset",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AOqWEY582pW-hJ1QRRuQgfK9OGWeCNe9p8RpcPpoU1k/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 259172985,
+          "mode": "list",
+          "cachedResultName": "sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1AOqWEY582pW-hJ1QRRuQgfK9OGWeCNe9p8RpcPpoU1k/edit#gid=259172985"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "Name"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Degree",
+              "displayName": "Degree",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Skills",
+              "displayName": "Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Experience",
+              "displayName": "Experience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Availability",
+              "displayName": "Availability",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "submittedAt",
+              "displayName": "submittedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "years",
+              "displayName": "years",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "selection",
+              "displayName": "selection",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "formMode",
+              "displayName": "formMode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "headers",
+              "displayName": "headers",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "params",
+              "displayName": "params",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "webhookUrl",
+              "displayName": "webhookUrl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "executionMode",
+              "displayName": "executionMode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        576,
+        -16
+      ],
+      "id": "3322006e-f367-440e-8b52-9cec645fc783",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ggmbvf9wZTPsqw5q",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1qABImxFXV_CZKFUvyqfahCx3Ukhlz911v34DXQoYEPk",
+          "mode": "list",
+          "cachedResultName": "Candidate Dataset",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qABImxFXV_CZKFUvyqfahCx3Ukhlz911v34DXQoYEPk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1739274821,
+          "mode": "list",
+          "cachedResultName": "Candidate Dataset",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qABImxFXV_CZKFUvyqfahCx3Ukhlz911v34DXQoYEPk/edit#gid=1739274821"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email": "={{ $('On form submission').item.json.Email }}",
+            "selection": "={{ false }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        576,
+        336
+      ],
+      "id": "7b723623-3513-4988-ad23-84dad0df9da8",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ggmbvf9wZTPsqw5q",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json.Email }}",
+        "subject": "You've been selected for an interview!",
+        "emailType": "text",
+        "message": "=",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        784,
+        -16
+      ],
+      "id": "8d9e2ace-daa1-4b50-a09c-744ffb7ec5c9",
+      "name": "Send Email - Selected",
+      "webhookId": "e697e743-2ffa-4391-aae0-4ad0340f67a9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "uIDEkYl12HwL4lFP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('On form submission').item.json.Email }}",
+        "subject": "Update on your application",
+        "emailType": "text",
+        "message": "Hi {{ $('On form submission').item.json.Name }},\n\nThank you for your interest and for taking the time to apply. After careful review, we will not be moving forward with your application at this time.\n\nWe appreciate your effort and wish you the best in your search.\n\nBest regards,\nHiring Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        784,
+        336
+      ],
+      "id": "f2661d43-c6b3-4911-a165-6caf6317d893",
+      "name": "Send Email - Rejected",
+      "webhookId": "9a82fd5f-ed3e-492f-a5de-1540b861b5e1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "uIDEkYl12HwL4lFP",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Ask HR for Approval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "skills check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "skills check": {
+      "main": [
+        [
+          {
+            "node": "Ask HR for Approval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask HR for Approval": {
+      "main": [
+        [
+          {
+            "node": "Wait for Human Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Human Review": {
+      "main": [
+        [
+          {
+            "node": "Check Approval Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Approval Decision": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send Email - Selected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Send Email - Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a6f234e5-52e8-45ca-b508-ab29fc3985d9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "baa7ee1294b97bf3777c1131f1caed288c461b43fd3b7be6fd08ae0364bb9175"
+  },
+  "nodeGroups": [],
+  "id": "KPcsNl5LFLnwioek",
+  "tags": []
+}
