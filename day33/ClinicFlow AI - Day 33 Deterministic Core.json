@@ -1,0 +1,269 @@
+{
+  "name": "ClinicFlow AI - Day 33 Deterministic Core",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clinicflow-day33-core",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        512
+      ],
+      "id": "2efb95b4-cacd-46e4-82d3-55ae731d1743",
+      "name": "[D33-01] Receive Structured Request",
+      "webhookId": "c64640f0-0372-44ae-8f61-da762b63b0d2",
+      "notesInFlow": true,
+      "notes": "Day 33 test endpoint. Day 34 will add WhatsApp normalization before this same contract."
+    },
+    {
+      "parameters": {
+        "jsCode": "const incoming = $json.body && typeof $json.body === 'object' && !Array.isArray($json.body)\n  ? $json.body\n  : $json;\n\nconst clean = (value, max = 500) => {\n  if (value === undefined || value === null) return null;\n  const normalized = String(value).trim();\n  return normalized ? normalized.slice(0, max) : null;\n};\n\nconst patientInput = incoming.patient && typeof incoming.patient === 'object'\n  ? incoming.patient\n  : {};\n\nconst metadata = incoming.metadata && typeof incoming.metadata === 'object' && !Array.isArray(incoming.metadata)\n  ? incoming.metadata\n  : {};\n\nconst normalized = {\n  message_id: clean(incoming.message_id ?? incoming.idempotency_key, 160),\n  intent: clean(incoming.intent, 50)?.toLowerCase() ?? null,\n  patient: {\n    name: clean(patientInput.name ?? incoming.patient_name, 120),\n    phone: clean(patientInput.phone ?? incoming.phone, 30),\n  },\n  doctor_code: clean(incoming.doctor_code, 40)?.toUpperCase() ?? null,\n  preferred_date: clean(incoming.preferred_date, 10),\n  time_window: clean(incoming.time_window, 20)?.toLowerCase() ?? null,\n  slot_id: clean(incoming.slot_id, 50),\n  new_slot_id: clean(incoming.new_slot_id, 50),\n  appointment_id: clean(incoming.appointment_id, 50),\n  brief_reason: clean(incoming.brief_reason, 500),\n  late_minutes: incoming.late_minutes ?? null,\n  language: clean(incoming.language, 20)?.toLowerCase() ?? 'unknown',\n  source: clean(incoming.source, 40)?.toLowerCase() ?? 'day33_test',\n  metadata,\n};\n\nreturn [{ json: normalized }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        592
+      ],
+      "id": "d18d91ca-73c0-4fd2-902e-ff42e476f30e",
+      "name": "[D33-02] Normalize Core Input",
+      "notesInFlow": true,
+      "notes": "Produces the stable Day 33 request shape. It does not make booking decisions."
+    },
+    {
+      "parameters": {
+        "jsCode": "const request = { ...$json };\nconst errors = [];\nconst supportedIntents = new Set([\n  'list_slots',\n  'book',\n  'reschedule',\n  'cancel',\n  'check_appointment',\n  'confirm_attendance',\n  'report_late',\n  'join_waitlist',\n  'check_queue_status',\n]);\nconst uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;\nconst datePattern = /^\\d{4}-\\d{2}-\\d{2}$/;\n\nconst hasValidPhone = () => {\n  const digits = String(request.patient?.phone ?? '').replace(/\\D/g, '');\n  return digits.length >= 10 && digits.length <= 15 && !/^0+$/.test(digits);\n};\nconst requirePhone = () => {\n  if (!hasValidPhone()) errors.push('patient.phone must contain 10 to 15 digits');\n};\nconst requirePatientName = () => {\n  const length = String(request.patient?.name ?? '').trim().length;\n  if (length < 2 || length > 120) errors.push('patient.name must contain 2 to 120 characters');\n};\nconst requireUuid = (field) => {\n  if (!uuidPattern.test(String(request[field] ?? ''))) errors.push(`${field} must be a valid UUID`);\n};\nconst requireDate = () => {\n  if (!datePattern.test(String(request.preferred_date ?? ''))) {\n    errors.push('preferred_date must use YYYY-MM-DD');\n    return;\n  }\n  const parsed = new Date(`${request.preferred_date}T00:00:00Z`);\n  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== request.preferred_date) {\n    errors.push('preferred_date is not a real calendar date');\n  }\n};\n\nif (!request.message_id) errors.push('message_id is required');\nif (request.message_id && !/^[A-Za-z0-9._:-]{3,160}$/.test(request.message_id)) {\n  errors.push('message_id contains unsupported characters');\n}\nif (!request.intent) errors.push('intent is required');\nif (request.intent && !supportedIntents.has(request.intent)) {\n  errors.push(`unsupported intent: ${request.intent}`);\n}\n\nif (supportedIntents.has(request.intent)) {\n  switch (request.intent) {\n    case 'list_slots':\n      if (!/^DR-[A-Z0-9_-]{2,30}$/.test(String(request.doctor_code ?? ''))) {\n        errors.push('doctor_code must use a verified code such as DR-USMAN');\n      }\n      requireDate();\n      break;\n    case 'book':\n      requirePatientName();\n      requirePhone();\n      requireUuid('slot_id');\n      break;\n    case 'reschedule':\n      requirePhone();\n      requireUuid('appointment_id');\n      requireUuid('new_slot_id');\n      break;\n    case 'cancel':\n    case 'confirm_attendance':\n      requirePhone();\n      requireUuid('appointment_id');\n      break;\n    case 'report_late':\n      requirePhone();\n      requireUuid('appointment_id');\n      if (!Number.isInteger(Number(request.late_minutes)) || Number(request.late_minutes) < 1 || Number(request.late_minutes) > 360) {\n        errors.push('late_minutes must be an integer from 1 to 360');\n      } else {\n        request.late_minutes = Number(request.late_minutes);\n      }\n      break;\n    case 'join_waitlist':\n      requirePatientName();\n      requirePhone();\n      if (!/^DR-[A-Z0-9_-]{2,30}$/.test(String(request.doctor_code ?? ''))) {\n        errors.push('doctor_code must use a verified code such as DR-USMAN');\n      }\n      requireDate();\n      if (request.time_window && !['morning', 'afternoon', 'evening', 'any'].includes(request.time_window)) {\n        errors.push('time_window must be morning, afternoon, evening or any');\n      }\n      break;\n    case 'check_appointment':\n    case 'check_queue_status':\n      requirePhone();\n      if (request.appointment_id) requireUuid('appointment_id');\n      break;\n  }\n}\n\nif (request.brief_reason && request.brief_reason.length > 500) {\n  errors.push('brief_reason must not exceed 500 characters');\n}\n\nreturn [{\n  json: {\n    ...request,\n    valid: errors.length === 0,\n    validation: {\n      valid: errors.length === 0,\n      errors,\n      checked_at: new Date().toISOString(),\n    },\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        592
+      ],
+      "id": "00cf0095-a5ef-40c1-9b02-fbf3a16cfce0",
+      "name": "[D33-03] Validate Core Contract",
+      "notesInFlow": true,
+      "notes": "Rejects invalid structure before a database connection is used. PostgreSQL repeats authoritative checks."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6b3c6295-e00d-480e-b150-893c96ed24ee",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1024,
+        592
+      ],
+      "id": "a2e6c3e4-b09d-4167-9ef8-2b1a879a07d4",
+      "name": "[D33-04] Request Valid?"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    http_status: 400,\n    body: {\n      ok: false,\n      error_code: 'VALIDATION_FAILED',\n      message: 'The request did not match the ClinicFlow core contract',\n      errors: $json.validation?.errors ?? ['Unknown validation error'],\n      message_id: $json.message_id ?? null,\n    },\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        752
+      ],
+      "id": "d8df26c7-5903-40e3-8967-bc35f038378a",
+      "name": "[D33-05] Build Validation Error"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT clinicflow.process_core_request($1::jsonb) AS result;",
+        "options": {
+          "queryReplacement": "={{ [JSON.stringify($json)] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1280,
+        512
+      ],
+      "id": "1cc458a9-9ee3-4eb4-9a72-4aba71d67595",
+      "name": "[D33-06] Execute Atomic Core Action",
+      "notesInFlow": true,
+      "credentials": {
+        "postgres": {
+          "id": "F19Z8C3KpBI8igAt",
+          "name": "ClinicFlow Supabase"
+        }
+      },
+      "notes": "Select the Supabase PostgreSQL credential after import. The JSON export intentionally contains no credential ID."
+    },
+    {
+      "parameters": {
+        "jsCode": "let result = $json.result;\n\nif (typeof result === 'string') {\n  try {\n    result = JSON.parse(result);\n  } catch {\n    result = {\n      ok: false,\n      error_code: 'INVALID_DATABASE_RESPONSE',\n      message: 'The database returned an invalid response',\n    };\n  }\n}\n\nif (!result || typeof result !== 'object' || Array.isArray(result)) {\n  result = {\n    ok: false,\n    error_code: 'EMPTY_DATABASE_RESPONSE',\n    message: 'The database returned no usable result',\n  };\n}\n\nconst statusByCode = {\n  DOCTOR_NOT_FOUND: 404,\n  SLOT_NOT_FOUND: 404,\n  APPOINTMENT_NOT_FOUND: 404,\n  QUEUE_ENTRY_NOT_FOUND: 404,\n  SLOT_UNAVAILABLE: 409,\n  DOCTOR_UNAVAILABLE: 409,\n  APPOINTMENT_NOT_RESCHEDULABLE: 409,\n  APPOINTMENT_NOT_CANCELLABLE: 409,\n  APPOINTMENT_NOT_CONFIRMABLE: 409,\n  APPOINTMENT_NOT_ELIGIBLE: 409,\n  CORE_DATABASE_ERROR: 503,\n};\n\nreturn [{\n  json: {\n    http_status: result.ok === true ? 200 : (statusByCode[result.error_code] ?? 400),\n    body: result,\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        512
+      ],
+      "id": "1aaeb7db-164a-44f1-af0e-8df1c06ec016",
+      "name": "[D33-07] Format Core Result"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.http_status }}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Cache-Control",
+                "value": "no-store"
+              },
+              {
+                "name": "X-Content-Type-Options",
+                "value": "nosniff"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1840,
+        592
+      ],
+      "id": "74548765-c6de-45c0-a7a3-83f2613ed5ef",
+      "name": "[D33-08] Return Core Response",
+      "notesInFlow": true,
+      "notes": "Returns one JSON response for both valid and rejected paths."
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "[D33-01] Receive Structured Request": {
+      "main": [
+        [
+          {
+            "node": "[D33-02] Normalize Core Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[D33-02] Normalize Core Input": {
+      "main": [
+        [
+          {
+            "node": "[D33-03] Validate Core Contract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[D33-03] Validate Core Contract": {
+      "main": [
+        [
+          {
+            "node": "[D33-04] Request Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[D33-04] Request Valid?": {
+      "main": [
+        [
+          {
+            "node": "[D33-06] Execute Atomic Core Action",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "[D33-05] Build Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[D33-05] Build Validation Error": {
+      "main": [
+        [
+          {
+            "node": "[D33-08] Return Core Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[D33-06] Execute Atomic Core Action": {
+      "main": [
+        [
+          {
+            "node": "[D33-07] Format Core Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "[D33-07] Format Core Result": {
+      "main": [
+        [
+          {
+            "node": "[D33-08] Return Core Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4f319bce-e1a1-455c-ac0d-312943a6128c",
+  "meta": {
+    "instanceId": "baa7ee1294b97bf3777c1131f1caed288c461b43fd3b7be6fd08ae0364bb9175"
+  },
+  "nodeGroups": [],
+  "id": "0g1uAtFB0nUFxiiG",
+  "tags": []
+}
